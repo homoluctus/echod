@@ -6,5 +6,5 @@ This is simple echo server and client written by Python
     - TCP
     - UDP
 - Address family
-    - AF_INET(IPv4)
+    - IPv4 (AF_INET)
 - Command line
