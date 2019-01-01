@@ -1,38 +1,56 @@
 import sys
 import socket
-from utils import handle_args
+from utils import handle_args, Version
 
-args = handle_args()
+def tcp_client(callback, server_address, version=4):
+    with socket.socket(family=getattr(socket, Version(version).name),
+                        type=socket.SOCK_STREAM) as sock:
+        
+        try:
+            sock.connect(server_address)
+        except Exception as err:
+            sys.exit(err)
+        except:
+            raise
 
-with socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM, proto=0) as sock:
-    sock.connect((args.address, args.port))
+        try:
+            callback(sock)
+        except Exception as err:
+            sys.exit(err)
+        except KeyboardInterrupt:
+            sys.exit("[!] Forced shutdown")
+        except:
+            raise
+        else:
+            print("[*] Closing connection")
 
+    print("[*] Closed connection\n[*] Terminated")
+
+def callback(socket):
     print("[*] Please input message")
 
-    try:
-        while True:
-            msg = input('>>> ')
+    while True:
+        msg = input('>>> ')
 
-            if msg == 'exit':
-                print("[*] Connection shutdown")
-                break
+        if msg == 'exit':
+            print("[*] Connection shutdown")
+            break
 
-            try:
-                sock.sendall(msg.encode())
-            except Exception as err:
-                sys.exit(err)
+        try:
+            socket.sendall(msg.encode())
+        except Exception as err:
+            sys.exit(err)
 
-            data = sock.recv(1024)
-            if not data:
-                break
+        data = socket.recv(1024)
+        if not data:
+            break
 
-            print("[+] Received", repr(data.decode()))
+        print("[+] Received", repr(data.decode()))
 
-    except KeyboardInterrupt:
-        sys.exit("\n[*] Forced shutdown")
+if __name__ == '__main__':
+    args = handle_args()
 
-    except Exception as err:
-        sys.exit(err)
-        
-    finally:
-        print("[*] Terminated")
+    if args.protocol == 'tcp':
+        tcp_client(callback, server_address=(args.address, args.port), version=args.version)
+    else:
+        pass
