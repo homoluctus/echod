@@ -1,30 +1,66 @@
 import sys
 import socket
-from utils import handle_args, Version
+from utils import handle_args, Version, validate_address
 
-def tcp_client(callback, server_address, version=4):
-    with socket.socket(family=getattr(socket, Version(version).name),
-                        type=socket.SOCK_STREAM) as sock:
+class SocketClient:
+    def __init__(self,
+                 callback,
+                 server_address,
+                 protocol,
+                 version,
+                 active=False):
+
+        self.callback = callback
+        self.server_address = server_address
+        self.socket_type = self._get_socket_type(protocol)
+        self.address_family = getattr(socket, Version(version).name)
+
+        self.socket = socket.socket(
+                        family=self.address_family,
+                        type=self.socket_type)
+
+        if protocol == 'tcp':
+            try:
+                self._connect_tcp_server()
+            except:
+                self.stop()
+
+        if active:
+            self.run()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.stop()
+
+    def stop(self):
+        self.socket.close()
+        print("[*] Closed connection\n[*] Terminated")
+    
+    def _get_socket_type(self, protocol):
+        if protocol == 'tcp':
+            socket_type = socket.SOCK_STREAM
+        else:
+            socket_type = socket.SOCK_DGRAM
         
+        return socket_type
+
+    def _connect_tcp_server(self):
         try:
-            sock.connect(server_address)
-        except Exception as err:
-            sys.exit(err)
+            self.socket.connect(self.server_address)
         except:
             raise
 
+    def run(self):
         try:
-            callback(sock)
-        except Exception as err:
-            sys.exit(err)
+            self.callback(self.socket)
         except KeyboardInterrupt:
-            sys.exit("[!] Forced shutdown")
+            print("\n[!] Forced shutdown")
         except:
             raise
         else:
             print("[*] Closing connection")
-
-    print("[*] Closed connection\n[*] Terminated")
 
 def callback(socket):
     print("[*] Please input message")
@@ -50,7 +86,8 @@ def callback(socket):
 if __name__ == '__main__':
     args = handle_args()
 
-    if args.protocol == 'tcp':
-        tcp_client(callback, server_address=(args.address, args.port), version=args.version)
-    else:
-        pass
+    with SocketClient(callback,
+                      server_address=(args.address, args.port),
+                      protocol=args.protocol,
+                      version=args.version) as client:
+        client.run()
