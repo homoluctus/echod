@@ -1,16 +1,8 @@
 import sys
 import socket
 import ipaddress
-from enum import Enum
 
-from utils import validate_address
-
-class Version(Enum):
-    AF_INET = 4
-    AF_INET6 = 6
-
-    def __str__(self):
-        return '{}: IPv{}'.format(self.name, self.value)
+from utils import validate_address, Version
 
 class BaseServer:
     def __init__(self,
