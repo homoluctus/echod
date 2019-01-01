@@ -5,7 +5,7 @@ from tcp import TCPServer
 class MyHandler(BaseHandler):
     max_buffer_size = 1024
 
-    def handle(self):
+    def process(self):
         while True:
             raw_data = self.connection.recv(self.max_buffer_size)
             if not raw_data:
