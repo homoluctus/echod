@@ -5,7 +5,7 @@ class BaseHandler:
 
         try:
             self.setup()
-            self.handle()
+            self.process()
         except:
             raise
         finally:
@@ -14,7 +14,7 @@ class BaseHandler:
     def setup(self):
         pass
 
-    def handle(self):
+    def process(self):
         pass
 
     def end(self):
