@@ -3,11 +3,33 @@ import threading
 import logging
 import hashlib
 import ipaddress
+from enum import Enum
 
 def handle_args():
     parser = argparse.ArgumentParser(description='Simple Socket IO with TCP')
-    parser.add_argument('-b', '--bind_address', metavar='address', default='127.0.0.1', dest='address', help='bind address (default 127.0.0.1)')
-    parser.add_argument('-p', '--port', metavar='port', default=9999, type=int, help='bind port (default 9999)')
+    parser.add_argument('-b', '--bind_address',
+                        metavar='address',
+                        default='127.0.0.1',
+                        dest='address',
+                        help='bind address (default 127.0.0.1)')
+
+    parser.add_argument('-p', '--port',
+                        metavar='port',
+                        default=9999,
+                        type=int,
+                        help='bind port (default=9999)')
+
+    parser.add_argument('-t', '--type',
+                        choices=['tcp', 'udp'],
+                        dest='protocol',
+                        default='tcp',
+                        help='Layer 4 protocol TCP or UDP (default=tcp)')
+
+    parser.add_argument('-v', '--version',
+                        choices=[4, 6],
+                        type=int,
+                        default=4,
+                        help='IPv4 or v6 (default=4)')
 
     return parser.parse_args()
 
@@ -77,3 +99,10 @@ def validate_address(host, port, version):
         raise ValueError('Invalid port number')
 
     return True
+
+class Version(Enum):
+    AF_INET = 4
+    AF_INET6 = 6
+
+    def __str__(self):
+        return '{}: IPv{}'.format(self.name, self.value)
