@@ -98,8 +98,6 @@ def validate_address(host, port, version):
     if port not in range(0, 65536):
         raise ValueError('Invalid port number')
 
-    return True
-
 class Version(Enum):
     AF_INET = 4
     AF_INET6 = 6
