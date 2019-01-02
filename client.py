@@ -15,6 +15,13 @@ class SocketClient:
         self.socket_type = self._get_socket_type(protocol)
         self.address_family = getattr(socket, Version(version).name)
 
+        try:
+            validate_address(self.server_address[0],
+                             self.server_address[1],
+                             version)
+        except:
+            raise
+
         self.socket = socket.socket(
                         family=self.address_family,
                         type=self.socket_type)
