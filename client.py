@@ -76,7 +76,6 @@ def callback(socket):
         msg = input('>>> ')
 
         if msg == 'exit':
-            print("[*] Connection shutdown")
             break
 
         try:
