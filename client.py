@@ -1,5 +1,7 @@
 import sys
 import socket
+import selectors
+
 from utils import handle_args, Version, validate_address
 
 class SocketClient:
@@ -25,13 +27,6 @@ class SocketClient:
 
         self.socket = socket.socket(family=self.address_family,
                                     type=self.socket_type)
-
-        if protocol == 'tcp':
-            try:
-                self._connect_tcp_server()
-            except:
-                self.stop()
-                raise
 
         if active:
             self.run()
@@ -59,15 +54,20 @@ class SocketClient:
         except:
             raise
 
-    def run(self):
+    def run(self, timeout=1.0):
+        if self.socket_type == socket.SOCK_STREAM:
+            try:
+                self._connect_tcp_server()
+            except:
+                self.stop()
+                raise
+
         try:
             self.callback(self.socket)
         except:
             raise
 
 def callback(sock):
-    sock.settimeout(2.0)
-    
     print("[*] Please input message")
 
     while True:
