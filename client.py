@@ -8,6 +8,7 @@ class SocketClient:
                  server_address,
                  protocol,
                  version,
+                 timeout = 2,
                  active=False):
 
         self.callback = callback
@@ -65,6 +66,8 @@ class SocketClient:
             raise
 
 def callback(sock):
+    sock.settimeout(2.0)
+    
     print("[*] Please input message")
 
     while True:
@@ -75,9 +78,11 @@ def callback(sock):
             break
 
         try:
-            sock.sendall(msg.encode())
-        except Exception as err:
-            sys.exit(err)
+            if sock.sendall(msg.encode()) is not None:
+                sock.shutdown(socket.SHUT_WR)
+                break
+        except:
+            raise
 
         data = sock.recv(1024)
         if not data:
