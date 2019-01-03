@@ -70,7 +70,7 @@ def callback(sock):
     while True:
         msg = input('>>> ')
 
-        if msg == 'exit':
+        if msg in ['', 'exit', 'EXIT']:
             sock.shutdown(socket.SHUT_WR)
             break
 
@@ -99,3 +99,5 @@ if __name__ == '__main__':
     except:
         from traceback import print_exc
         print_exc()
+    else:
+        print("[*] Terminated")
