@@ -22,15 +22,15 @@ class SocketClient:
         except:
             raise
 
-        self.socket = socket.socket(
-                        family=self.address_family,
-                        type=self.socket_type)
+        self.socket = socket.socket(family=self.address_family,
+                                    type=self.socket_type)
 
         if protocol == 'tcp':
             try:
                 self._connect_tcp_server()
             except:
                 self.stop()
+                raise
 
         if active:
             self.run()
@@ -43,7 +43,6 @@ class SocketClient:
 
     def stop(self):
         self.socket.close()
-        print("[*] Closed connection\n[*] Terminated")
     
     def _get_socket_type(self, protocol):
         if protocol == 'tcp':
@@ -62,12 +61,8 @@ class SocketClient:
     def run(self):
         try:
             self.callback(self.socket)
-        except KeyboardInterrupt:
-            print("\n[!] Forced shutdown")
         except:
             raise
-        else:
-            print("[*] Closing connection")
 
 def callback(socket):
     print("[*] Please input message")
@@ -92,8 +87,14 @@ def callback(socket):
 if __name__ == '__main__':
     args = handle_args()
 
-    with SocketClient(callback,
-                      server_address=(args.address, args.port),
-                      protocol=args.protocol,
-                      version=args.version) as client:
-        client.run()
+    try:
+        with SocketClient(callback,
+                          server_address=(args.address, args.port),
+                          protocol=args.protocol,
+                          version=args.version) as client:
+            client.run()
+    except KeyboardInterrupt:
+            print("\n[!] Forced shutdown")
+    except:
+        from traceback import print_exc
+        print_exc()
