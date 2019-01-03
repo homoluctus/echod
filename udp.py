@@ -11,5 +11,5 @@ class UDPServer(base.BaseServer):
                          HandlerClass)
 
     def accept_connection(self):
-        data, client_address = self.socket.recvfrom(self.max_buffer_size)
-        return ((self.socket, data), client_address)
+        data, _ = self.socket.recvfrom(self.max_buffer_size)
+        return (self.socket, data)

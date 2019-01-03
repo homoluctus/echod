@@ -8,20 +8,17 @@ class MyHandler(BaseHandler):
     max_buffer_size = 1024
 
     def process(self):
-        while True:
-            raw_data = self.connection.recv(self.max_buffer_size)
-            if not raw_data:
-                break
+        raw_data = self.connection.recv(self.max_buffer_size)
+        if not raw_data:
+            raise ValueError
 
-            decoded_data = raw_data.decode()
-            print(decoded_data)
+        decoded_data = raw_data.decode()
+        print('Received %r' % decoded_data)
 
-            try:
-                self.connection.sendall(b'ACK')
-            except:
-                from traceback import print_exc
-                print_exc()
-                break
+        try:
+            self.connection.sendall(b'ACK')
+        except:
+            raise
 
 if __name__ == '__main__':
     args = handle_args()

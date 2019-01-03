@@ -1,5 +1,6 @@
 import sys
 import socket
+import selectors
 import ipaddress
 
 from utils import validate_address, Version
@@ -28,7 +29,7 @@ class BaseServer:
             raise
 
         self.__shutdown_flag = False
-        self.__preparation_for_acceptance = False
+        self.__continue_flag = True
         self.HandlerClass = HandlerClass
 
         self.address_family = getattr(socket, Version(version).name)
@@ -40,7 +41,6 @@ class BaseServer:
             try:
                 self.bind()
                 self.listen()
-                self.__preparation_for_acceptance = True
             except:
                 self.stop()
                 raise
@@ -78,24 +78,47 @@ class BaseServer:
 
         self.socket.close()
 
-    def start_connection(self):
-        if self.__preparation_for_acceptance:
+    def start_connection(self, timeout=None):
+        with selectors.DefaultSelector() as selector:
+            selector.register(self.socket, selectors.EVENT_READ)
+
             while not self.__shutdown_flag:
-                self._handle_connection()
+                ready = selector.select(timeout)
 
-    def _handle_connection(self):
-        try:
-            connection, client_address = self.accept_connection()
-        except:
-            raise
+                if not ready:
+                    break
 
+                for key, _ in ready:
+                    self.__continue_flag = True
+
+                    if key.fileobj == self.socket:
+                        try:
+                            connection = self.accept_connection()
+                            selector.register(connection[0], selectors.EVENT_READ)
+                            print("Accepted from", connection[0].getpeername())
+
+                            if connection[0].type == socket.SOCK_DGRAM:
+                                self._handle_connection(connection)
+                                if not self.__continue_flag:
+                                    self.stop_connection(connection[0], selector)
+
+                        except:
+                            from traceback import print_exc
+                            print_exc()
+
+                    else:
+                        self._handle_connection(key.fileobj)
+
+                        if not self.__continue_flag:
+                            self.stop_connection(key.fileobj, selector)
+
+    def _handle_connection(self, connection):
         try:
-            self.start_process(connection, client_address)
+            self.start_process(connection)
+        except ValueError:
+            self.__continue_flag = False
         except:
-            self.handle_process_error(client_address)
-        finally:
-            self.close_connection(connection)
-            self.__shutdown_flag = True
+            self.handle_process_error(connection)
 
     def accept_connection(self):
         """
@@ -104,19 +127,24 @@ class BaseServer:
         """
         pass
 
-    def start_process(self, connection, client_address):
+    def start_process(self, connection):
         """
         Overriden by threading class
         """
 
-        self.handle_process(connection, client_address)
+        self.handle_process(connection)
 
-    def handle_process(self, connection, client_address):
+    def handle_process(self, connection):
         """
         Handle to send and receive data
         """
-
+        client_address = connection.getpeername()
         self.HandlerClass(connection, client_address)
+
+    def stop_connection(self, connection, selector):
+        print("Closed connection from", connection.getpeername())
+        selector.unregister(connection)
+        self.close_connection(connection)
 
     def close_connection(self, connection):
         """
@@ -124,8 +152,9 @@ class BaseServer:
         """
         pass
 
-    def handle_process_error(self, client_address):
-        sys.stderr.write('Exception occurred on the connection from {}'.format(client_address))
+    def handle_process_error(self, connection):
+        sys.stderr.write(
+            'Exception occurred on the connection from {}'.format(connection.getpeername()))
 
         from traceback import print_exc
-        print_exc(file=sys.stderr)
+        print_exc()
