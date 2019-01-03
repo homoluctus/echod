@@ -1,5 +1,7 @@
 import sys
 import socket
+import selectors
+
 from utils import handle_args, Version, validate_address
 
 class SocketClient:
@@ -8,6 +10,7 @@ class SocketClient:
                  server_address,
                  protocol,
                  version,
+                 timeout = 2,
                  active=False):
 
         self.callback = callback
@@ -24,13 +27,6 @@ class SocketClient:
 
         self.socket = socket.socket(family=self.address_family,
                                     type=self.socket_type)
-
-        if protocol == 'tcp':
-            try:
-                self._connect_tcp_server()
-            except:
-                self.stop()
-                raise
 
         if active:
             self.run()
@@ -58,27 +54,37 @@ class SocketClient:
         except:
             raise
 
-    def run(self):
+    def run(self, timeout=1.0):
+        if self.socket_type == socket.SOCK_STREAM:
+            try:
+                self._connect_tcp_server()
+            except:
+                self.stop()
+                raise
+
         try:
             self.callback(self.socket)
         except:
             raise
 
-def callback(socket):
+def callback(sock):
     print("[*] Please input message")
 
     while True:
         msg = input('>>> ')
 
-        if msg == 'exit':
+        if msg in ['', 'exit', 'EXIT']:
+            sock.shutdown(socket.SHUT_WR)
             break
 
         try:
-            socket.sendall(msg.encode())
-        except Exception as err:
-            sys.exit(err)
+            if sock.sendall(msg.encode()) is not None:
+                sock.shutdown(socket.SHUT_WR)
+                break
+        except:
+            raise
 
-        data = socket.recv(1024)
+        data = sock.recv(1024)
         if not data:
             break
 
@@ -98,3 +104,5 @@ if __name__ == '__main__':
     except:
         from traceback import print_exc
         print_exc()
+    else:
+        print("[*] Terminated")
