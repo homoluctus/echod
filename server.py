@@ -1,3 +1,5 @@
+import sys
+
 from utils import handle_args
 from handle import BaseHandler
 from tcp import TCPServer
@@ -26,5 +28,11 @@ if __name__ == '__main__':
 
     address = ((args.address, args.port))
 
-    with TCPServer(address, 4, MyHandler) as server:
-        server.start()
+    try:
+        with TCPServer(address, 4, MyHandler) as server:
+            server.start()
+    except KeyboardInterrupt:
+        sys.stderr.write('[!] EXIT\n')
+    except:
+        from traceback import print_exc
+        print_exc()
