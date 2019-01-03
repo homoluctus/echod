@@ -64,21 +64,22 @@ class SocketClient:
         except:
             raise
 
-def callback(socket):
+def callback(sock):
     print("[*] Please input message")
 
     while True:
         msg = input('>>> ')
 
         if msg == 'exit':
+            sock.shutdown(socket.SHUT_WR)
             break
 
         try:
-            socket.sendall(msg.encode())
+            sock.sendall(msg.encode())
         except Exception as err:
             sys.exit(err)
 
-        data = socket.recv(1024)
+        data = sock.recv(1024)
         if not data:
             break
 
