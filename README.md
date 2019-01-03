@@ -2,10 +2,12 @@
 This is simple echo server and client written by Python3.  
 Supported platform is most UNIX systems.
 
+## Support Protocol
+- IPv4
+- TCP
+- UDP
+
 ## Feature
-- Socket type
-    - TCP
-    - UDP
-- Address family
-    - IPv4 (AF_INET)
-- Command line
+- I*/O Multiplexing
+- Multi Clients
+- Command Line
