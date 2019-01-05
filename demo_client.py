@@ -23,9 +23,9 @@ def client(callback, addr, proto, version, **kwargs):
     with SocketClient(callback,
                       server_address=addr,
                       protocol=proto,
-                      version=version,
-                      kwargs=kwargs) as client:
-        client.run()
+                      version=version) as client:
+
+        client.run(kwargs)
 
 
 if __name__ == '__main__':
