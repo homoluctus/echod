@@ -13,6 +13,7 @@ Supported platform is most UNIX systems.
 - Command Line
 
 ## Demo
+You need to execute demo_client.py at other terminal after executing demo_server.py
 
 ```
 $ python3 demo_server.py
