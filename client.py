@@ -1,8 +1,7 @@
 import sys
 import socket
-import selectors
 
-from utils import handle_args, Version, validate_address
+from utils import Version, validate_address
 
 class SocketClient:
     def __init__(self,
@@ -10,13 +9,14 @@ class SocketClient:
                  server_address,
                  protocol,
                  version,
-                 timeout = 2,
-                 active=False):
+                 active=False,
+                 kwargs={}):
 
         self.callback = callback
         self.server_address = server_address
         self.socket_type = self._get_socket_type(protocol)
         self.address_family = getattr(socket, Version(version).name)
+        self.kwargs = kwargs
 
         try:
             validate_address(self.server_address[0],
@@ -54,7 +54,7 @@ class SocketClient:
         except:
             raise
 
-    def run(self, timeout=1.0):
+    def run(self):
         if self.socket_type == socket.SOCK_STREAM:
             try:
                 self._connect_tcp_server()
@@ -63,46 +63,6 @@ class SocketClient:
                 raise
 
         try:
-            self.callback(self.socket)
+            self.callback(self.socket, self.kwargs)
         except:
             raise
-
-def callback(sock):
-    print("[*] Please input message")
-
-    while True:
-        msg = input('>>> ')
-
-        if msg in ['', 'exit', 'EXIT']:
-            sock.shutdown(socket.SHUT_WR)
-            break
-
-        try:
-            if sock.sendall(msg.encode()) is not None:
-                sock.shutdown(socket.SHUT_WR)
-                break
-        except:
-            raise
-
-        data = sock.recv(1024)
-        if not data:
-            break
-
-        print("[+] Received", repr(data.decode()))
-
-if __name__ == '__main__':
-    args = handle_args()
-
-    try:
-        with SocketClient(callback,
-                          server_address=(args.address, args.port),
-                          protocol=args.protocol,
-                          version=args.version) as client:
-            client.run()
-    except KeyboardInterrupt:
-            print("\n[!] Forced shutdown")
-    except:
-        from traceback import print_exc
-        print_exc()
-    else:
-        print("[*] Terminated")
