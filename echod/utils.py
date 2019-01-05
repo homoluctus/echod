@@ -5,6 +5,7 @@ import hashlib
 import ipaddress
 from enum import Enum
 
+
 def handle_args():
     parser = argparse.ArgumentParser(description='Simple Socket IO with TCP')
     parser.add_argument('-b', '--bind_address',
@@ -33,6 +34,7 @@ def handle_args():
 
     return parser.parse_args()
 
+
 def terminate_threads(timeout=None):
     threads = threading.enumerate()
     threads.remove(threading.main_thread())
@@ -40,6 +42,7 @@ def terminate_threads(timeout=None):
     if threads:
         for th in threads:
             th.join(timeout)
+
 
 def hash_password(password, salt=None):
     if not isinstance(password, bytes):
@@ -50,6 +53,7 @@ def hash_password(password, salt=None):
 
     seed = password + salt
     return hashlib.sha256(seed).hexdigest()
+
 
 def set_logger(name=None, filename="server.log", level="info"):
     """
@@ -79,6 +83,7 @@ def set_logger(name=None, filename="server.log", level="info"):
 
     return logger
 
+
 def validate_address(host, port, version):
     """
     Validate host address, port and ip address version
@@ -86,17 +91,18 @@ def validate_address(host, port, version):
 
     try:
         ip_address = ipaddress.ip_address(host)
-    except:
+    except ValueError:
         raise
-        
+
     if not isinstance(version, int):
         raise TypeError('Invalid object type')
-        
+
     if ip_address.version != version:
         raise ValueError('Missmatch ip address version')
 
     if port not in range(0, 65536):
         raise ValueError('Invalid port number')
+
 
 class Version(Enum):
     AF_INET = 4

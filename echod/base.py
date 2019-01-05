@@ -1,10 +1,10 @@
 import sys
 import socket
 import selectors
-import ipaddress
 from traceback import print_exc
 
 from utils import validate_address, Version
+
 
 class BaseServer:
     def __init__(self,
@@ -25,8 +25,10 @@ class BaseServer:
         self._version = version
 
         try:
-            validate_address(self.server_address[0], self.server_address[1], version)
-        except:
+            validate_address(self.server_address[0],
+                             self.server_address[1],
+                             version)
+        except (ValueError, TypeError):
             raise
 
         self.__shutdown_flag = False
@@ -71,7 +73,7 @@ class BaseServer:
         Overriden by TCPServer subclass
         """
         pass
-    
+
     def stop(self):
         self.__shutdown_flag = True
         self.stop_server()
@@ -162,7 +164,7 @@ class BaseServer:
         pass
 
     def handle_process_error(self, connection):
-        sys.stderr.write(
-            'Exception occurred on the connection from {}'.format(connection.getpeername()))
+        sys.stderr.write('Exception occurred on the connection from {}'.format(
+                    connection.getpeername()))
 
         print_exc()

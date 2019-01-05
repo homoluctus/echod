@@ -3,6 +3,7 @@ import socket
 
 from .utils import Version, validate_address
 
+
 class SocketClient:
     def __init__(self,
                  callback,
@@ -20,7 +21,7 @@ class SocketClient:
             validate_address(self.server_address[0],
                              self.server_address[1],
                              version)
-        except:
+        except (ValueError, TypeError):
             raise
 
         self.socket = socket.socket(family=self.address_family,
@@ -37,19 +38,19 @@ class SocketClient:
 
     def stop(self):
         self.socket.close()
-    
+
     def _get_socket_type(self, protocol):
         if protocol == 'tcp':
             socket_type = socket.SOCK_STREAM
         else:
             socket_type = socket.SOCK_DGRAM
-        
+
         return socket_type
 
     def _connect_tcp_server(self):
         try:
             self.socket.connect(self.server_address)
-        except:
+        except ConnectionRefusedError:
             raise
 
     def run(self, kwargs={}):

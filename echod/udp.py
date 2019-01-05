@@ -1,6 +1,7 @@
 import base
 import socket
 
+
 class UDPServer(base.BaseServer):
     max_buffer_size = 1024
 
