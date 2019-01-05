@@ -13,10 +13,10 @@ Supported platform is most UNIX systems.
 - Command Line
 
 ## Demo
-You need to execute demo_client.py at other terminal after executing demo_server.py
+You need to execute demo/client.py at other terminal after executing demo/server.py
 
 ```
-$ python3 demo_server.py
+$ python3 demo/server.py
 Server started
 Accepted from ('127.0.0.1', 40620)
 Received 'hello' from ('127.0.0.1', 40620)
