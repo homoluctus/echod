@@ -8,6 +8,6 @@ Supported platform is most UNIX systems.
 - UDP
 
 ## Feature
-- I*/O Multiplexing
+- I/O Multiplexing
 - Multi Clients
 - Command Line
