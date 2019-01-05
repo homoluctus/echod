@@ -3,6 +3,9 @@ import socket
 from time import sleep
 from threading import Thread
 
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/echod')
+
 from echod.client import SocketClient
 from echod.utils import handle_args
 
