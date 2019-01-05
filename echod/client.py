@@ -9,14 +9,12 @@ class SocketClient:
                  server_address,
                  protocol,
                  version,
-                 active=False,
-                 kwargs={}):
+                 active=False):
 
-        self.callback = callback
+        self._callback = callback
         self.server_address = server_address
         self.socket_type = self._get_socket_type(protocol)
         self.address_family = getattr(socket, Version(version).name)
-        self.kwargs = kwargs
 
         try:
             validate_address(self.server_address[0],
@@ -54,7 +52,7 @@ class SocketClient:
         except:
             raise
 
-    def run(self):
+    def run(self, kwargs={}):
         if self.socket_type == socket.SOCK_STREAM:
             try:
                 self._connect_tcp_server()
@@ -63,6 +61,6 @@ class SocketClient:
                 raise
 
         try:
-            self.callback(self.socket, self.kwargs)
+            self._callback(self.socket, kwargs)
         except:
             raise
