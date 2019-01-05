@@ -1,7 +1,7 @@
 import sys
 import socket
 
-from utils import Version, validate_address
+from .utils import Version, validate_address
 
 class SocketClient:
     def __init__(self,

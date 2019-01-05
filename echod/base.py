@@ -4,7 +4,7 @@ import selectors
 import ipaddress
 from traceback import print_exc
 
-from utils import validate_address, Version
+from .utils import validate_address, Version
 
 class BaseServer:
     def __init__(self,
