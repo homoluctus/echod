@@ -2,6 +2,7 @@ import sys
 import socket
 import selectors
 import ipaddress
+from traceback import print_exc
 
 from utils import validate_address, Version
 
@@ -11,13 +12,13 @@ class BaseServer:
                  version,
                  socket_type,
                  HandlerClass,
-                 active=True):
+                 active=False):
         """
         :param server_address: tuple of host address and port
         :param version: IP version (4 or 6)
         :param protocol: Layer 4 protocol (TCP or UDP)
         :param HandlerClass: Class to handle, send and receive data
-        :param active: Boolean to activate server
+        :param active: Boolean to start server
         """
 
         self.server_address = server_address
@@ -39,8 +40,7 @@ class BaseServer:
 
         if active:
             try:
-                self.bind()
-                self.listen()
+                self.start()
             except:
                 self.stop()
                 raise
@@ -56,7 +56,12 @@ class BaseServer:
         return str(Version(self._version))
 
     def start(self):
-        self.start_connection()
+        try:
+            self.bind()
+            self.listen()
+            self.start_connection()
+        except:
+            raise
 
     def bind(self):
         self.socket.bind(self.server_address)
@@ -79,38 +84,42 @@ class BaseServer:
         self.socket.close()
 
     def start_connection(self, timeout=None):
-        with selectors.DefaultSelector() as selector:
-            selector.register(self.socket, selectors.EVENT_READ)
+        self.selector = selectors.DefaultSelector()
+        self.selector.register(self.socket, selectors.EVENT_READ)
 
-            while not self.__shutdown_flag:
-                ready = selector.select(timeout)
+        while not self.__shutdown_flag:
+            ready = self.selector.select(timeout)
 
-                if not ready:
-                    break
+            if not ready:
+                break
 
-                for key, _ in ready:
-                    self.__continue_flag = True
+            for key, _ in ready:
+                self.__continue_flag = True
 
-                    if key.fileobj == self.socket:
-                        try:
-                            connection = self.accept_connection()
-                            selector.register(connection[0], selectors.EVENT_READ)
-                            print("Accepted from", connection[0].getpeername())
+                if key.fileobj == self.socket:
+                    try:
+                        self._handle_acceptance()
+                    except:
+                        print_exc()
 
-                            if connection[0].type == socket.SOCK_DGRAM:
-                                self._handle_connection(connection)
-                                if not self.__continue_flag:
-                                    self.stop_connection(connection[0], selector)
+                else:
+                    self._handle_connection(key.fileobj)
 
-                        except:
-                            from traceback import print_exc
-                            print_exc()
+                    if not self.__continue_flag:
+                        self.stop_connection(key.fileobj)
 
-                    else:
-                        self._handle_connection(key.fileobj)
+        self.selector.close()
 
-                        if not self.__continue_flag:
-                            self.stop_connection(key.fileobj, selector)
+    def _handle_acceptance(self):
+        connection = self.accept_connection()
+        self.selector.register(connection[0], selectors.EVENT_READ)
+        print("Accepted from", connection[0].getpeername())
+
+        if connection[0].type == socket.SOCK_DGRAM:
+            self._handle_connection(connection)
+
+            if not self.__continue_flag:
+                self.stop_connection(connection[0])
 
     def _handle_connection(self, connection):
         try:
@@ -141,9 +150,9 @@ class BaseServer:
         client_address = connection.getpeername()
         self.HandlerClass(connection, client_address)
 
-    def stop_connection(self, connection, selector):
+    def stop_connection(self, connection):
         print("Closed connection from", connection.getpeername())
-        selector.unregister(connection)
+        self.selector.unregister(connection)
         self.close_connection(connection)
 
     def close_connection(self, connection):
@@ -156,5 +165,4 @@ class BaseServer:
         sys.stderr.write(
             'Exception occurred on the connection from {}'.format(connection.getpeername()))
 
-        from traceback import print_exc
         print_exc()

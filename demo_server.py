@@ -13,12 +13,7 @@ class MyHandler(BaseHandler):
             raise ValueError
 
         decoded_data = raw_data.decode()
-        print('Received %r' % decoded_data)
-
-        try:
-            self.connection.sendall(b'ACK')
-        except:
-            raise
+        print('Received {} from {}'.format(repr(decoded_data), self.client_address))
 
 if __name__ == '__main__':
     args = handle_args()
@@ -27,6 +22,7 @@ if __name__ == '__main__':
 
     try:
         with TCPServer(address, 4, MyHandler) as server:
+            print("Server started")
             server.start()
     except KeyboardInterrupt:
         sys.stderr.write('[!] EXIT\n')
