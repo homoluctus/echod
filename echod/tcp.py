@@ -1,4 +1,4 @@
-import .base
+import base
 import socket
 
 class TCPServer(base.BaseServer):

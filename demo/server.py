@@ -8,8 +8,7 @@ except (ModuleNotFoundError, ImportError):
     from traceback import print_exc
     print_exc()
     sys.exit("\n[!] Please add echod path to PYTHONPATH")
-except:
-    raise
+
 
 class MyHandler(BaseHandler):
     max_buffer_size = 1024
@@ -20,7 +19,9 @@ class MyHandler(BaseHandler):
             raise ValueError
 
         decoded_data = raw_data.decode()
-        print('Received {} from {}'.format(repr(decoded_data), self.client_address))
+        print('Received {} from {}'.format(
+                    repr(decoded_data), self.client_address))
+
 
 if __name__ == '__main__':
     args = handle_args()
@@ -33,6 +34,3 @@ if __name__ == '__main__':
             server.start()
     except KeyboardInterrupt:
         sys.stderr.write('[!] EXIT\n')
-    except:
-        from traceback import print_exc
-        print_exc()
